@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+version="0.9.0"
+
+IGNORE=""
+DIR="."
+KEYWORD=""
+
+# ============================================================
+# Functions
+help() {
+  pod2text $0
+  exit 1
+}
+
+# ============================================================
+# Parse Arguments
+
+for opt in "$@"; do
+  case "${1:-}" in
+    "-i" | "--ignore" )
+      if [[ -z $2 || "$2" =~ ^-+ ]]; then
+        help
+      else
+        IGNORE="$2"
+        shift 2
+      fi
+      ;;
+    "-d" | "--dir" )
+      if [[ -z $2 || "$2" =~ ^-+ ]]; then
+        help
+      else
+        DIR="$2"
+        shift 2
+      fi
+      ;;
+    "-h" | "--help" ) help ;;
+    "-v" | "--version" )
+      echo $version
+      exit 0
+      ;;
+    * )
+      if [[ ${1:-} && -z "$KEYWORD" ]]; then
+        KEYWORD="$1"
+        shift
+      fi
+      ;;
+  esac
+done
+
+if [[ -z $KEYWORD ]]; then
+  help
+fi
+
+grep_cmd='egrep -Hn --color=always'
+if [[ $IGNORE ]]; then
+  find $DIR -type f | egrep -v "$IGNORE" | xargs $grep_cmd "$KEYWORD"
+else
+  find $DIR -type f | xargs $grep_cmd "$KEYWORD"
+fi
+
+exit 0
+
+: <<'__EOF__'
+
+=encoding utf8
+
+=head1 NAME
+
+B<xfgrep> - Wrapper command of C<find ... | xargs grep ...>
+
+=head1 SYNOPSYS
+
+    xfgrep KEYWORD [-i|--ignore IGNORE_FILE_PATTERN] [-d|--dir DIR]
+
+=head1 DESCRIPTION
+
+This wrapper executes following commands:
+
+    find $DIR -type f [ | egrep -v "$IGNORE" ] | xargs egrep -Hn "$KEYWORD"
+
+=head1 AUTHORS
+
+YASUTAKE Kiyoshi E<lt>yasutake.kiyoshi@gmail.comE<gt>
+
+=head1 LICENSE
+
+The MIT License (MIT)
+
+Copyright (c) 2016 YASUTAKE Kiyoshi
+
+=cut
+
+__EOF__
+
