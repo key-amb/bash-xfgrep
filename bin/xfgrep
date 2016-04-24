@@ -6,6 +6,7 @@ version="0.9.0"
 
 IGNORE=""
 DIR="."
+FILE="*"
 KEYWORD=""
 
 # ============================================================
@@ -36,6 +37,14 @@ for opt in "$@"; do
         shift 2
       fi
       ;;
+    "-f" | "--file" )
+      if [[ -z $2 || "$2" =~ ^-+ ]]; then
+        help
+      else
+        FILE="$2"
+        shift 2
+      fi
+      ;;
     "-h" | "--help" ) help ;;
     "-v" | "--version" )
       echo $version
@@ -56,10 +65,13 @@ fi
 
 grep_cmd='egrep -Hn --color=always'
 if [[ $IGNORE ]]; then
-  find $DIR -type f | egrep -v "$IGNORE" | xargs $grep_cmd "$KEYWORD"
+  command="find $DIR -type f -name '$FILE' | egrep -v '$IGNORE' | xargs $grep_cmd '$KEYWORD'"
 else
-  find $DIR -type f | xargs $grep_cmd "$KEYWORD"
+  command="find $DIR -type f -name '$FILE' | xargs $grep_cmd '$KEYWORD'"
 fi
+
+echo $command
+/usr/bin/env bash -c "$command"
 
 exit 0
 
@@ -73,13 +85,22 @@ B<xfgrep> - Wrapper command of C<find ... | xargs grep ...>
 
 =head1 SYNOPSYS
 
-    xfgrep KEYWORD [-i|--ignore IGNORE_FILE_PATTERN] [-d|--dir DIR]
+    xfgrep KEYWORD [-i|--ignore IGNORE_FILE_PATTERN] [-d|--dir DIR] [-f|--file FILE]
+
+    # version
+    xfgrep -v|--version
+    # help
+    xfgrep -h|--help
 
 =head1 DESCRIPTION
 
 This wrapper executes following commands:
 
-    find $DIR -type f [ | egrep -v "$IGNORE" ] | xargs egrep -Hn "$KEYWORD"
+    find $DIR -type f -name "$FILE" [ | egrep -v "$IGNORE" ] | xargs egrep -Hn "$KEYWORD"
+
+=head1 SEE ALSO
+
+L<https://github.com/key-amb/bash-xfperl-pie>
 
 =head1 AUTHORS
 
